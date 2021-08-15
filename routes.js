@@ -13,7 +13,11 @@ module.exports = function (app, myDataBase) {
   });
 
   app.route('/profile').get(ensureAuthenticated, (req, res) => {
-    res.render(process.cwd() + '/views/pug/profile', { username: req.user.username });
+    res.render('pug/profile', { username: req.user.username });
+  });
+
+  app.route('/chat').get(ensureAuthenticated, (req, res) => {
+    res.render('pug/chat', { user: req.user });
   });
 
   app.route('/logout').get((req, res) => {
@@ -28,7 +32,7 @@ module.exports = function (app, myDataBase) {
         if (err) {
           next(err);
         } else if (user) {
-          res.redirect('/');
+          res.redirect('/profile');
         } else {
           myDataBase.insertOne({ username: req.body.username, password: hash }, (e, d) => {
             if (e) {
@@ -48,9 +52,10 @@ module.exports = function (app, myDataBase) {
 
   app.route('/auth/github').get(passport.authenticate('github'));
   app.route('/auth/github/callback').get(passport.authenticate('github', { failureRedirect: '/' }), (req, res) => {
-    res.redirect('/profile');
+    console.log('aqui')
+    req.session.user_id = req.user.id;
+    res.redirect('/chat');
   });
-
 
   app.use((req, res, next) => {
     res.status(404).type('text').send('Not Found');
